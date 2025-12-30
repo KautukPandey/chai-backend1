@@ -8,6 +8,9 @@ import {ApiResponse} from "../utils/ApiResponse.js"
 const generateAccessAndRefreshTokens = async(userId)=>{
     try {
         const user = await User.findById(userId)
+        if (!user) {
+            throw new ApiError(404, "User not found while generating tokens");
+        }
         const accessToken = user.generateAccessToken()
         const refreshToken = user.generateRefreshToken()
 
@@ -17,7 +20,8 @@ const generateAccessAndRefreshTokens = async(userId)=>{
         return {accessToken,refreshToken}
 
     } catch (error) {
-        throw new ApiError(500,"Something went wrong while generating tokens")
+        console.error("TOKEN GENERATION ERROR:", error);
+        throw error;
     }
 }
 
@@ -91,8 +95,8 @@ const registerUser = asyncHandler(async (req , res)=>{
 const loginUser = asyncHandler(async (req,res)=>{
     const {email, username, password} = req.body
 
-    if(!username || !email){
-        throw new ApiError(400,"username or email is required")
+    if(!username && !email){
+        throw new ApiError(400,"username and email is required")
     }
 
     const user = await User.findOne({
@@ -111,7 +115,7 @@ const loginUser = asyncHandler(async (req,res)=>{
 
     const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id)
 
-    const loggedInUser = await User.findOne(user._id).select("-password -refreshToken")
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 
     const options = {
         httpOnly: true,
