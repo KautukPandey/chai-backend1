@@ -61,6 +61,16 @@ const publishAVideo = asyncHandler(async (req, res) => {
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params
     //TODO: get video by id
+    const video = await Video.findById(videoId)
+    if(!video){
+        throw new ApiError(400,"Video does not exist")
+    }
+    if(video.isPublished===false){
+        throw new ApiError(400,"Video restricted")
+
+    }
+    return res.status(200).json(new ApiResponse(200,video,"Video fetched"))
+
 })
 
 const updateVideo = asyncHandler(async (req, res) => {
