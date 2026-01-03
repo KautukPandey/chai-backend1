@@ -76,12 +76,54 @@ const getVideoById = asyncHandler(async (req, res) => {
 const updateVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
     //TODO: update video details like title, description, thumbnail
+    const video = await Video.findById(videoId)
+    if(!video){
+        throw new ApiError(404,"Video not found")
+    }
+    if(!video.owner.equals(req.user._id)){
+        throw new ApiError(404,"Not the owner")
+    }
+    const updatedVideo = {};
+    if(req.body.title){
+        updatedVideo.title = req.body.title
+    }
+    if(req.body.description){
+        updatedVideo.description = req.body.description
+    }
+
+    const thumbnailLocalPath = req.files?.thumbnail[0]?.path
+    if(thumbnailLocalPath){
+        const thumbnail = await uploadOnCloudinary(thumbnailLocalPath)
+        updatedVideo.thumbnail = thumbnail.url
+    }
+
+    const video1 = await Video.findByIdAndUpdate(
+        videoId,
+        {
+            $set: updatedVideo
+        },{
+            new: true,
+        }
+    )
+
+    return res.status(200).json(new ApiResponse(200,video1,"Updated video"))
+
 
 })
 
 const deleteVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
     //TODO: delete video
+    const video = await Video.findById(videoId)
+    if(!video){
+        throw new ApiError(400,"Video not found")
+    }
+    if(!video.owner.equals(req.user._id)){
+        throw new ApiError(404,"Not the owner")
+    }
+    const video1 = await Video.findByIdAndDelete({_id:videoId})
+    return res.status(200).json(new ApiResponse(200,video1,"Deleted Successfully"))
+
 })
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
