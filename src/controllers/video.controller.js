@@ -10,7 +10,29 @@ import {uploadOnCloudinary} from "../utils/cloudinary.js"
 const getAllVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
     //TODO: get all videos based on query, sort, pagination
-   
+    const filter = {}
+    filter.isPublished = true
+    if(userId){
+        filter.owner = userId
+
+    }
+    if(query){
+        filter.$or = [
+            {title: {$regex: query, $options: "i"}},
+            {description: {$regex: query, $options: "i"}}
+        ]
+    }
+    const sort = {}
+    if(sortBy){
+        sort[sortBy] = sortType === "asc"?1:-1
+    }
+    else{
+        sort.createdAt = -1
+    }
+    const skip = (page-1)*limit
+    const videos = await Video.find(filter).sort(sort).skip(skip).limit(limit)
+
+    return res.status(200).json(new ApiResponse(200,videos,"Filtered result"))
 })
 
 const publishAVideo = asyncHandler(async (req, res) => {
