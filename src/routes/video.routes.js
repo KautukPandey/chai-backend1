@@ -21,7 +21,6 @@ router.route("/publish-video").post(
     ]),
     publishAVideo
 )
-
 router.route("/getVideo/:videoId").get(getVideoById)
 
 

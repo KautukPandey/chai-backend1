@@ -14,7 +14,6 @@ const getAllVideos = asyncHandler(async (req, res) => {
     filter.isPublished = true
     if(userId){
         filter.owner = userId
-
     }
     if(query){
         filter.$or = [
