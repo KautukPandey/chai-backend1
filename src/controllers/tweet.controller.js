@@ -39,11 +39,14 @@ const updateTweet = asyncHandler(async (req, res) => {
     //TODO: update tweet
     const {content} = req.body
     const {tweetId} = req.params
+    if(!isValidObjectId(tweetId)){
+        throw new ApiError(400,"Invalid tweet id")
+    }
     const tweet = await Tweet.findById(tweetId)
     if(!tweet){
         throw new ApiError(400,"Tweet does not exists")
     }
-    if(tweet.owner.equals(req.user._id)){
+    if(!tweet.owner.equals(req.user._id)){
         throw new ApiError(400,"Not the owner")
     }
     if(!content || content.trim()===""){
@@ -65,6 +68,19 @@ const updateTweet = asyncHandler(async (req, res) => {
 
 const deleteTweet = asyncHandler(async (req, res) => {
     //TODO: delete tweet
+    const {tweetId} = req.params
+    if(!isValidObjectId(tweetId)){
+        throw new ApiError(400,"Invalid tweet id")
+    }
+    const tweet = await Tweet.findById(tweetId)
+    if(!tweet){
+        throw new ApiError(400,"Tweet not found")
+    }
+    if(!tweet.owner.equals(req.user._id)){
+        throw new ApiError(400,"Not the tweet owner")
+    }
+    const tweet1 = await Tweet.findByIdAndDelete(tweetId)
+    return res.status(200).json(new ApiResponse(200,tweet1,"Tweet deleted"))
 })
 
 export {
