@@ -6,30 +6,32 @@ import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 
 
-// const toggleSubscription = asyncHandler(async (req, res) => {
-//     const {channelId} = req.params
-//     // TODO: toggle subscription
-//     if(!isValidObjectId(channelId)){
-//         throw new ApiError(400,"Invalid ID")
-//     }
-//     const channel = await User.findById(channelId)
-//     if(!channel){
-//         throw new ApiError(400,"Channel does not exists")
-//     }
-//     const sub = await Subscription.findById(req.user._id)
-//     if(!sub){
-//         const subss = await Subscription.create({
-//             subscriber: req.user._id,
-//             channel: channelId
-//         })
+const toggleSubscription = asyncHandler(async (req, res) => {
+    const {channelId} = req.params
+    const subscriberId = req.user._id
+    // TODO: toggle subscription
+    if(!isValidObjectId(channelId)){
+        throw new ApiError(400,"Invalid ID")
+    }
+    const channel = await User.findById(channelId)
+    if(!channel){
+        throw new ApiError(400,"Channel does not exists")
+    }
+    
 
-//         res.status(200).json(new ApiResponse(200,subss,"Subscribed"))
-//     }else{
-//         const sub1 = await Subscription.findByIdAndDelete(req.user._id)
+    const isSub = await Subscription.findOne({"subscriber": subscriberId,"channel": channelId})
+    if(isSub){
+        const delSub = await Subscription.findByIdAndDelete(isSub._id)
+        
+        return res.status(200).json(new ApiResponse(200,delSub,"Unsubscribed"))
+    }
+    const subss = await Subscription.create({
+            subscriber: req.user._id,
+            channel: channelId
+        })
 
-//         return res.status(200).json(new ApiResponse(200,sub1,"Unsubscribed"))
-//     }
-// })
+    return res.status(200).json(new ApiResponse(200,subss,"Subscribed"))
+})
 
 // controller to return subscriber list of a channel
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
